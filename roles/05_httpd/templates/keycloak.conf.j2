@@ -1,0 +1,21 @@
+<VirtualHost {{ ansible_default_ipv4.address }}:443>
+	ServerName {{ ansible_fqdn }}
+	ErrorLog  "logs/{{ ansible_fqdn }}_error_ssl.log"
+	CustomLog "logs/{{ ansible_fqdn }}_access_ssl.log" combined
+
+	SSLEngine On
+	SSLCertificateFile "/etc/pki/tls/certs/{{ ansible_fqdn }}.crt"
+	SSLCertificateKeyFile "/etc/pki/tls/private/{{ ansible_fqdn }}.key"
+
+	# Proxy rules
+	ProxyRequests Off
+	ProxyPreserveHost On
+	ProxyPass / http://localhost:8080/
+	ProxyPassReverse / http://localhost:8080/
+
+	## Request header rules
+	## as per http://httpd.apache.org/docs/2.2/mod/mod_headers.html#requestheader
+	RequestHeader set X-Forwarded-Proto "https"
+	RequestHeader set X-Forwarded-Port "443"
+
+</VirtualHost>

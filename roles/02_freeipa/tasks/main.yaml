@@ -1,0 +1,37 @@
+---
+
+- name: Install FreeIPA packages
+  shell: dnf -y module enable idm:DL1
+
+- name: Run distro-sync
+  shell: dnf distro-sync
+
+- name: Install FreeIPA server
+  shell: dnf -y module install idm:DL1/server
+
+# This needs to be changed to check if a certain file has been installed
+# rather than relying on a failed error code
+- name: Checking if there is a FreeIPA instance
+  shell: systemctl status ipa
+  register: freeipainstance
+  ignore_errors: true
+
+- name: Configuring FreeIPA
+  shell: ipa-server-install --hostname ipa01.{{ DOMAIN }} --realm {{ REALM }} --domain={{ DOMAIN }} --ds-password {{ lookup('password','secrets/dmpwd chars=ascii_letters,digits length=20')}} --admin-password {{ lookup('password','secrets/adminpwd chars=ascii_letters,digits length=20')}} --unattended
+  when: freeipainstance.rc != 0
+
+- name: Setting firewall
+  firewalld:
+    service: "{{ item }}"
+    permanent: true
+    state: enabled
+    immediate: yes
+  with_items:
+    - http
+    - https
+    - ldap
+    - ldaps
+    - ntp
+    - kerberos
+    - kpasswd
+    - dns

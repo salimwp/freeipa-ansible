@@ -1,0 +1,87 @@
+---
+
+- name: Install tar
+  dnf:
+    name: tar
+    state: latest
+
+- name: Create service account 
+  user:
+    name: coredns
+    system: yes
+    state: present
+    shell: /sbin/nologin
+    home: /var/lib/coredns
+
+- name: Downloading coredns
+  get_url:
+    url: https://github.com/coredns/coredns/releases/download/v1.6.9/coredns_1.6.9_linux_amd64.tgz
+    dest: /usr/src/
+    checksum: sha256:84f437bc8e270a9a309a807db40032250f5efb9e399cea3a66ba95f46d5fb6a9
+
+- name: Unarchieve coredns
+  unarchive:
+    src: /usr/src/coredns_1.6.9_linux_amd64.tgz
+    dest: /usr/local/bin/
+    owner: coredns
+    group: coredns
+    remote_src: yes
+
+- name: Create /etc/coredns
+  file:
+    path: /etc/coredns
+    state: directory
+    mode: '0750'
+    owner: coredns
+    group: coredns
+
+- name: Transfer config file
+  template:
+    src: Corefile.conf.j2
+    dest: /etc/coredns/Corefile
+    owner: coredns
+    group: coredns
+
+- name: Transfer initial zone file
+  template:
+    src: "{{ 'db.' + DOMAIN }}.j2"
+    dest: "{{ '/etc/coredns/db.' + DOMAIN }}"
+    owner: coredns
+    group: coredns
+
+- name: Transfer initial reverse pointer zone file
+  template:
+    src: db.192.168.50.j2
+    dest: /etc/coredns/db.192.168.50
+    owner: coredns
+    group: coredns
+    
+- name: Transfer systemd file
+  copy:
+    src: coredns.service
+    dest: /etc/systemd/system/coredns.service
+
+- name: Starting up coredns
+  systemd:
+    name: coredns
+    daemon_reload: yes
+    state: restarted
+    enabled: yes
+
+- name: Open firewall port
+  firewalld:
+    service: dns
+    permanent: true
+    state: enabled
+    immediate: yes
+
+- name: Convert network configuration to new DNS
+  lineinfile:
+    path: /etc/sysconfig/network-scripts/ifcfg-ens3
+    regexp: '^DNS1*'
+    line: 'DNS1="{{ DNSSERVER }}"'
+
+- name: Copy new resolv
+  template:
+    src: resolv.conf.j2
+    dest: /etc/resolv.conf

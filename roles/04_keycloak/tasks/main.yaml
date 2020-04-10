@@ -1,0 +1,70 @@
+---
+
+- name: Install packages
+  dnf:
+    name: ['tar', 'java-1.8.0-openjdk']
+    state: latest
+
+- name: Create service account 
+  user:
+    name: keycloak
+    system: yes
+    state: present
+    shell: /sbin/nologin
+    home: /var/lib/keycloak
+
+- name: Download keycloak
+  get_url:
+    url: https://downloads.jboss.org/keycloak/9.0.2/keycloak-9.0.2.tar.gz
+    dest: /usr/src/keycloak-9.0.2.tar.gz
+    checksum: "sha1:f74fff5021de5ae32504ebf5c0855a8a17c32d72"
+    owner: keycloak
+    group: keycloak
+
+- name: Unarchive keycloak
+  unarchive:
+    src: /usr/src/keycloak-9.0.2.tar.gz
+    dest: /usr/local/
+    owner: keycloak
+    group: keycloak
+    remote_src: yes
+    creates: /usr/local/keycloak-9.0.2/version.txt
+
+- name: Create symlink keycloak dir
+  file:
+      src: /usr/local/keycloak-9.0.2
+      dest: /usr/local/keycloak
+      state: link
+      owner: keycloak
+      group: keycloak   
+  
+- name: Create keycloak admin user
+  command: /usr/local/keycloak/bin/add-user-keycloak.sh --user admin --password {{ lookup('password','secrets/keycloakadminpasswd chars=ascii_letters,digits length=20') }} --realm master
+  become_user: keycloak
+  ignore_errors: yes
+
+- name: Enable proxy-address-forwarding in standalone.xml
+  command: /usr/local/keycloak/bin/jboss-cli.sh 'embed-server,/subsystem=undertow/server=default-server/http-listener=default:write-attribute(name=proxy-address-forwarding,value=true)'
+  become_user: keycloak
+  ignore_errors: yes
+
+- name: Add port 443 to proxy in standalone.xml
+  command: /usr/local/keycloak/bin/jboss-cli.sh 'embed-server,/socket-binding-group=standard-sockets/socket-binding=proxy-https:add(port=443)'
+  become_user: keycloak
+  ignore_errors: yes
+
+- name: Enable proxy-https in standalone.xml
+  command: /usr/local/keycloak/bin/jboss-cli.sh 'embed-server,/subsystem=undertow/server=default-server/http-listener=default:write-attribute(name=redirect-socket,value=proxy-https)'
+  become_user: keycloak
+  ignore_errors: yes
+
+- name: Transfer keycloak startup script
+  copy:
+    src: keycloak.service
+    dest: /etc/systemd/system/keycloak.service
+
+- name: Starting up keycloak
+  systemd:
+    name: keycloak
+    daemon_reload: yes
+    state: started

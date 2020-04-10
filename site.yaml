@@ -1,0 +1,35 @@
+---
+
+- name: Configuring servers
+  hosts: all
+  become: yes
+  become_method: sudo
+  gather_facts: yes
+  roles:
+    - 01_common
+
+- name: Configuring DNS server
+  hosts: ipas
+  become: yes
+  become_method: sudo
+  gather_facts: yes
+  roles:
+    - 02_coredns
+
+- name: Configuring IPA server
+  hosts: ipas
+  become: yes
+  become_method: sudo
+  gather_facts: yes
+  roles:
+    - 02_freeipa
+
+- name: Configuring keycloak server
+  hosts: keycloaks
+  become: yes
+  become_method: sudo
+  gather_facts: yes
+  roles:
+    - 03_freeipa_client
+    - 04_keycloak
+    - 05_httpd

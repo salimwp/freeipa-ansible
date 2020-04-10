@@ -1,0 +1,31 @@
+$TTL    1M
+
+$ORIGIN {{ DOMAIN }}.
+
+@         IN  SOA {{ DOMAIN }}. ipa01.{{ DOMAIN }}. (
+              2020040419  ;
+              3600        ;
+              1800        ;
+              604800      ;
+              86400       ;
+) 
+
+@             IN  NS ipa01.{{ DOMAIN }}.
+ipa01         IN  A  192.168.50.50
+keycloak      IN  A  192.168.50.51
+k8s-master    IN  A  192.168.50.107
+k8s-node1     IN  A  192.168.50.105
+k8s-node2     IN  A  192.168.50.106
+
+_kerberos-master._tcp.{{ DOMAIN }}. 86400 IN SRV 0 100 88 ipa01.{{ DOMAIN }}.
+_kerberos-master._udp.{{ DOMAIN }}. 86400 IN SRV 0 100 88 ipa01.{{ DOMAIN }}.
+_kerberos._tcp.{{ DOMAIN }}. 86400 IN SRV 0 100 88 ipa01.{{ DOMAIN }}.
+_kerberos._udp.{{ DOMAIN }}. 86400 IN SRV 0 100 88 ipa01.{{ DOMAIN }}.
+_kerberos.{{ DOMAIN }}. 86400 IN TXT "{{ REALM }}"
+_kpasswd._tcp.{{ DOMAIN }}. 86400 IN SRV 0 100 464 ipa01.{{ DOMAIN }}.
+_kpasswd._udp.{{ DOMAIN }}. 86400 IN SRV 0 100 464 ipa01.{{ DOMAIN }}.
+_ldap._tcp.{{ DOMAIN }}. 86400 IN SRV 0 100 389 ipa01.{{ DOMAIN }}.
+ipa-ca.{{ DOMAIN }}. 86400 IN A 192.168.50.50
+
+*.apps    IN  CNAME master
+

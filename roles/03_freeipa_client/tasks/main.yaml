@@ -1,0 +1,28 @@
+---
+  
+- name: Convert network configuration to new DNS
+  lineinfile:
+    path: /etc/sysconfig/network-scripts/ifcfg-ens3
+    regexp: '^DNS1*'
+    line: 'DNS1="{{ DNSSERVER }}"'
+  
+- name: Copy new resolv
+  template:
+    src: resolv.conf.j2
+    dest: /etc/resolv.conf
+
+- name: Install FreeIPA packages
+  shell: dnf -y module enable idm:client
+  
+- name: Run distro-sync
+  shell: dnf distro-sync
+
+- name: Install FreeIPA client
+  shell: dnf -y module install idm:client/common
+
+- name: Configuring IPA client
+  shell: |
+    if [ ! -f "/var/lib/ipa-client/pki/kdc-ca-bundle.pem" ];
+    then
+      ipa-client-install --mkhomedir --principal=admin -w {{ lookup('password','secrets/adminpwd chars=ascii_letters,digits length=20')}} --unattended 
+    fi

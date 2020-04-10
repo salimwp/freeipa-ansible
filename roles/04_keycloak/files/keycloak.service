@@ -1,0 +1,14 @@
+[Unit]
+Description=Keycloak SSO startup
+After=network.target
+
+[Service]
+Type=idle
+User=keycloak
+Group=keycloak
+ExecStart=/usr/local/keycloak/bin/standalone.sh -b 127.0.0.1
+TimeoutStartSec=600
+TimeoutStopSec=600
+
+[Install]
+WantedBy=multi-user.target

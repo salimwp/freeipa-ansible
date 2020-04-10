@@ -1,0 +1,6 @@
+bin
+lib
+include
+pyvenv.cfg
+secrets
+roles/02_coredns/files/db*

@@ -1,0 +1,51 @@
+---
+
+- name: Install packages
+  dnf:
+    name: ['httpd', 'mod_ssl', 'openssl', 'python3-policycoreutils']
+    state: latest
+
+- name: Register http service with FreeIPA
+  ipa_service:
+    name: "{{ 'HTTP/keycloak' + '.' + DOMAIN }}"
+    state: present
+    ipa_host: "{{ 'ipa01' + '.' + DOMAIN }}"
+    ipa_user: admin
+    ipa_pass: "{{ lookup('password','secrets/adminpwd chars=ascii_letters,digits length=20')}}"
+
+- name: Check if SSL cert is granted
+  stat:
+    path: /etc/pki/tls/certs/{{ ansible_fqdn }}.crt
+  register: st
+
+- name: Retrieve SSL cert
+  command: ipa-getcert request -r -f /etc/pki/tls/certs/{{ ansible_fqdn }}.crt -k /etc/pki/tls/private/{{ ansible_fqdn }}.key -N CN={{ ansible_fqdn }} -D {{ ansible_fqdn }} -K HTTP/{{ ansible_fqdn }}
+  when: st.stat.exists == False
+
+- name: Copying vhost config to server
+  template:
+    src: keycloak.conf.j2
+    dest: /etc/httpd/conf.d/keycloak.conf
+
+- name: Pausing for certificate retrieval
+  pause:
+    minutes: 1
+
+- name: Starting httpd
+  systemd:
+    name: httpd
+    state: started
+    enabled: yes
+  
+- name: Opening firewall port
+  firewalld:
+    service: https
+    permanent: true
+    state: enabled
+    immediate: yes
+  
+- name: Enabling selinux proxy
+  seboolean:
+    name: httpd_can_network_connect
+    state: yes
+    persistent: yes

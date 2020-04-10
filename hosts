@@ -1,0 +1,15 @@
+all:
+    children:
+        ipas:
+            hosts:
+                ipa01:
+                    ansible_host: 192.168.50.50
+                    ansible_user: cloud
+                    ansible_ssh_common_args: '-o StrictHostKeyChecking=no' 
+        keycloaks:
+            hosts:
+                keycloak:
+                    ansible_host: 192.168.50.51
+                    ansible_user: cloud
+                    ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+        

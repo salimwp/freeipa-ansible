@@ -1,0 +1,19 @@
+$TTL    604800
+
+@         IN  SOA {{ DOMAIN }}. ipa01.{{ DOMAIN }}. (
+              2020040419  ;
+              3600        ;
+              1800        ;
+              604800      ;
+              86400       ;
+)
+
+@    IN    NS     ipa01.{{ DOMAIN }}.
+
+; ptr
+
+50    IN    PTR    ipa01.{{ DOMAIN }}.
+51    IN    PTR    keycloak.{{ DOMAIN }}.
+107   IN    PTR    k8s-master.{{ DOMAIN }}.
+105   IN    PTR    k8s-node1.{{ DOMAIN }}.
+106   IN    PTR    k8s-node2.{{ DOMAIN }}.

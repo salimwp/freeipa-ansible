@@ -1,0 +1,18 @@
+---
+
+- name: Creating initial users
+  ipa_user:
+    name: "{{ item.name }}"
+    state: present
+    givenname: "{{ item.givenname }}"
+    sn: "{{ item.sn }}"
+    password: "{{ lookup('password', 'secrets/user-{{ item.name }} length=10 chars=ascii_letters,digits')}}"
+    ipa_host: "ipa01.{{ DOMAIN }}"
+    ipa_user: admin
+    ipa_pass: "{{ lookup('password','secrets/adminpwd chars=ascii_letters,digits length=20')}}"
+    update_password: on_create
+  loop:
+    - { name: 'testuser1', givenname: 'Test', sn: 'User1' }
+    - { name: 'testuser2', givenname: 'Test', sn: 'User2' }
+    - { name: 'kubeuser1', givenname: 'Kube', sn: 'User1' }
+    - { name: 'kubeuser2', givenname: 'Kube', sn: 'User2' }

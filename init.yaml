@@ -1,0 +1,17 @@
+---
+
+- name: Configuring init freeipa accounts
+  hosts: ipas
+  become: yes
+  become_method: sudo
+  gather_facts: yes
+  roles:
+    - 07_freeipa_init
+
+- name: Configuring keycloak initial settings
+  hosts: keycloaks
+  become: yes
+  become_method: sudo
+  gather_facts: yes
+  roles:
+    - 08_keycloak_init

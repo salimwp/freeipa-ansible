@@ -1,0 +1,79 @@
+---
+
+- name: Setting hostname
+  hostname:
+    name: "{{ inventory_hostname + '.' + DOMAIN }}"
+
+- name: Adding hostname to /etc/hosts
+  lineinfile:
+    path: /etc/hosts
+    line: 127.0.0.1 {{ inventory_hostname }} 
+
+- name: Updating /etc/hosts file
+  blockinfile:
+    dest: /etc/hosts
+    content: "{{ lookup('template','templates/hosts.j2') }}"
+    state: present
+
+- name: Reset machine id
+  shell: |
+    if [ ! -f /root/machine-id-set ]; then
+      rm /etc/machine-id
+      systemd-machine-id-setup
+      touch  /root/machine-id-set
+    fi
+  register: machineIDChanged
+  changed_when: machineIDChanged.rc == 1
+  failed_when: machineIDChanged.rc >= 2 
+
+- name: Enable EPEL-repo
+  dnf:
+    name: epel-release
+    state: latest
+
+- name: Update packages
+  dnf:
+    name: '*'
+    state: latest
+    exclude: docker*
+
+- name: Checking if new kernel was installed
+  shell: |
+    NEW_KERNEL=`rpm -q kernel --queryformat '%{installtime} %{version}-%{release}.%{arch}\n' | sort -n -k1 | tail -1 | cut -d ' ' -f 2`
+    CURRENT_KERNEL=`uname -r`
+    if [ $NEW_KERNEL = $CURRENT_KERNEL ];
+    then
+      exit 0
+    else
+      exit 1
+    fi
+  register: bootRequired
+  changed_when: bootRequired.rc != 0
+  failed_when: bootRequired.rc >= 2
+  ignore_errors: yes
+
+- name: Rebooting server
+  reboot:
+  when: bootRequired.rc != 0
+
+- name: Install chrony
+  dnf:
+    name: chrony
+    state: latest
+
+- name: Starting up chronyd
+  systemd:
+    name: chronyd
+    state: started
+    enabled: yes
+
+- name: Installing firewall and python firewall  module
+  dnf:
+    name: ['python3-firewall','firewalld']
+    state: latest
+
+- name: Starting firewalld
+  systemd:
+    name: firewalld
+    state: started
+    enabled: yes

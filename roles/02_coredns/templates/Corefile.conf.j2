@@ -5,8 +5,8 @@
 }
 
 .:53 {
-   forward . 192.168.50.1
-   file /etc/coredns/db.{{ IPNET }}         50.168.192.in-addr.arpa
+   forward . {{ FORWARDDNS }}
+   file /etc/coredns/db.{{ IPNET }}         {{ PTRIP }}.in-addr.arpa
    log
    errors
    cache

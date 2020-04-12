@@ -7,6 +7,6 @@
     /usr/local/keycloak/bin/kcadm.sh create users -r example -s username=keyuser1 -s enabled=true
     /usr/local/keycloak/bin/kcadm.sh create users -r example -s username=keyuser2 -s enabled=true
     /usr/local/keycloak/bin/kcadm.sh create users -r example -s username=keyuser3 -s enabled=true
-    /usr/local/keycloak/bin/kcadm.sh set-password -r example --username keyuser1 --password {{ lookup('password','secrets/keycloakuser1passwd chars=ascii_letters,digits length=20') }}
-    /usr/local/keycloak/bin/kcadm.sh set-password -r example --username keyuser2 --password {{ lookup('password','secrets/keycloakuser2passwd chars=ascii_letters,digits length=20') }}
-    /usr/local/keycloak/bin/kcadm.sh set-password -r example --username keyuser3 --password {{ lookup('password','secrets/keycloakuser3passwd chars=ascii_letters,digits length=20') }}
+    /usr/local/keycloak/bin/kcadm.sh set-password -r example --username keyuser1 --new-password {{ lookup('password','secrets/keycloakuser1passwd chars=ascii_letters,digits length=20') }}
+    /usr/local/keycloak/bin/kcadm.sh set-password -r example --username keyuser2 --new-password {{ lookup('password','secrets/keycloakuser2passwd chars=ascii_letters,digits length=20') }}
+    /usr/local/keycloak/bin/kcadm.sh set-password -r example --username keyuser3 --new-password {{ lookup('password','secrets/keycloakuser3passwd chars=ascii_letters,digits length=20') }}

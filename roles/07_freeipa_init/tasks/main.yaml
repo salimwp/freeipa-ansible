@@ -16,3 +16,38 @@
     - { name: 'testuser2', givenname: 'Test', sn: 'User2' }
     - { name: 'kubeuser1', givenname: 'Kube', sn: 'User1' }
     - { name: 'kubeuser2', givenname: 'Kube', sn: 'User2' }
+
+- name: Creating keycloak bind user
+  ipa_user:
+    name: keycloakbind
+    state: present
+    givenname: Keycloak
+    sn: LDAP Bind
+    password: "{{ lookup('password', 'secrets/user-keycloakbind length=10 chars=ascii_letters,digits')}}"
+    ipa_host: "ipa01.{{ DOMAIN }}"
+    ipa_user: admin
+    ipa_pass: "{{ lookup('password','secrets/adminpwd chars=ascii_letters,digits length=20')}}"
+    update_password: on_create
+
+- name: Add keycloak bind user to user administrator role
+  ipa_role:
+    name: "User Administrator"
+    description: "Responsible for creating Users and Groups"
+    state: present
+    user:
+      - keycloakbind
+    ipa_host: "ipa01.{{ DOMAIN }}"
+    ipa_user: admin
+    ipa_pass: "{{ lookup('password','secrets/adminpwd chars=ascii_letters,digits length=20')}}"
+
+- name: Adding keycloak bind user to admins group
+  ipa_group:
+    name: admins
+    user: 
+      - keycloakbind
+      - admin
+    state: present
+    ipa_host: "ipa01.{{ DOMAIN }}"
+    ipa_user: admin
+    ipa_pass: "{{ lookup('password','secrets/adminpwd chars=ascii_letters,digits length=20')}}"
+

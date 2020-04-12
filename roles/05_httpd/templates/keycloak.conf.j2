@@ -1,3 +1,4 @@
+# Configs found here https://lists.jboss.org/pipermail/keycloak-user/2019-February/017359.html
 <VirtualHost {{ ansible_default_ipv4.address }}:443>
 	ServerName {{ ansible_fqdn }}
 	ErrorLog  "logs/{{ ansible_fqdn }}_error_ssl.log"
